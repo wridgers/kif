@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# ssh host with kif.db
+KIF_HOST="host"
+
+# location of kif.db and store/
+KIF_LOCATION="~/kif"
+
+# key to use for encrypting uploads
+KIF_GPGKEY="you@address.com"
+

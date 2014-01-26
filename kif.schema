@@ -1,0 +1,10 @@
+CREATE TABLE store (
+  id INTEGER PRIMARY KEY,
+  hash VARCHAR(256),
+  origin VARCHAR(256),
+  path VARCHAR(512),
+  file VARCHAR(256),
+  size VARCHAR(64),
+  date DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
