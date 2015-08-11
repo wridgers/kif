@@ -8,4 +8,3 @@ KIF_LOCATION="~/kif"
 
 # key to use for encrypting uploads
 KIF_GPGKEY="you@address.com"
-
