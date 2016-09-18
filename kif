@@ -40,7 +40,7 @@ function upload {
   # if the file doesn't exist and it's not a directory, die
   if [ ! -f "$FILENAME" ] && [ ! -d "$FILENAME" ]
   then
-    echo -e "${RED}MISSING${NC}, file '$FILENAME' does not exist."
+    echo -e "${RED}MISSING${NC}, file '${FILENAME}' does not exist."
     return
   fi
 
@@ -53,29 +53,29 @@ function upload {
 
   ORIGIN=$(hostname)
   FILEPATH=$(pwd)
-  FILESIZE=$(du -h "$FILENAME" | awk '{print $1}')
-  HASH=$(shasum "$FILENAME" | awk '{print $1}')
-  REMOTE_PATH="$KIF_LOCATION/store/$HASH"
+  FILESIZE=$(du -h "${FILENAME}" | awk '{print $1}')
+  HASH=$(shasum "${FILENAME}" | awk '{print $1}')
+  REMOTE_PATH="${KIF_LOCATION}/store/${HASH}"
 
   if ssh $KIF_HOST test -e $REMOTE_PATH
   then
-    echo -e "${BLUE}Skipping${NC} $FILENAME with hash ${PURPLE}${HASH}${NC}"
+    echo -e "${BLUE}Skipping${NC} ${FILENAME} with hash ${PURPLE}${HASH}${NC}"
     return
   fi
 
   echo -en "${GREEN}Backing up${NC} ${FILENAME} (${CYAN}${FILESIZE}${NC}) as ${PURPLE}${HASH}${NC} ..."
 
   # encrypt, gzip, and transfer the file. use tee to grab a checksum
-  LOCAL_CHECKSUM=$(gpg --encrypt --recipient "$KIF_GPGKEY" -o - $FILENAME |\
+  LOCAL_CHECKSUM=$(gpg --encrypt --recipient "${KIF_GPGKEY}" -o - $FILENAME |\
   gzip -f |\
   tee >(
-    ssh $KIF_HOST "cat > $REMOTE_PATH"
+    ssh $KIF_HOST "cat > ${REMOTE_PATH}"
   ) > >(
     shasum -a 256 | awk '{print $1}'
   ))
 
   # get remote checksum for comparison
-  REMOTE_CHECKSUM=$(ssh $KIF_HOST "sha256sum $REMOTE_PATH | awk '{print \$1}'")
+  REMOTE_CHECKSUM=$(ssh $KIF_HOST "sha256sum ${REMOTE_PATH} | awk '{print \$1}'")
 
   # use our checksums to ocnfirm the upload went okay
   if [ $LOCAL_CHECKSUM != $REMOTE_CHECKSUM ]
@@ -87,7 +87,7 @@ function upload {
   fi
 
   # add to kif.db
-  ssh $KIF_HOST "sqlite3 $KIF_LOCATION/kif.db \"INSERT INTO store ('hash', 'origin', 'path', 'file', 'size') VALUES ('$HASH', '$ORIGIN', '$FILEPATH', '$FILENAME', '$FILESIZE');\"";
+  ssh $KIF_HOST "sqlite ${KIF_LOCATION}/kif.db \"INSERT INTO store ('hash', 'origin', 'path', 'file', 'size') VALUES ('${HASH}', '${ORIGIN}', '${FILEPATH}', '${FILENAME}', '${FILESIZE}');\"";
 
   echo -e " ${GREEN}okay! ;-)${NC}"
 }
@@ -96,12 +96,12 @@ function fetch {
   HASH=$1
 
   # get the filename
-  FILENAME=$(ssh $KIF_HOST "sqlite3 $KIF_LOCATION/kif.db \"SELECT file FROM store WHERE hash='$HASH';\"";);
+  FILENAME=$(ssh $KIF_HOST "sqlite ${KIF_LOCATION}/kif.db \"SELECT file FROM store WHERE hash='${HASH}';\"";);
 
-  echo -e "Fetching ${PURPLE}${HASH}${NC} to $FILENAME.gpg ..."
+  echo -e "Fetching ${PURPLE}${HASH}${NC} to ${FILENAME}.gpg ..."
 
   # download and extract
-  ssh $KIF_HOST "cat $KIF_LOCATION/store/$HASH" | gzip -d -c | gpg --decrypt > $FILENAME
+  ssh $KIF_HOST "cat ${KIF_LOCATION}/store/${HASH}" | gzip -d -c | gpg --decrypt > $FILENAME
 
   echo -e " ${GREEN}okay! ;-)${NC}"
 }
@@ -111,8 +111,8 @@ function delete {
 
   echo -en "${RED}Deleting${NC} file with hash ${PURPLE}${HASH}${NC} ..."
 
-  ssh $KIF_HOST "rm -f $KIF_LOCATION/store/$HASH"
-  ssh $KIF_HOST "sqlite3 $KIF_LOCATION/kif.db \"DELETE FROM store WHERE hash='$HASH';\""
+  ssh $KIF_HOST "rm -f ${KIF_LOCATION}/store/${HASH}"
+  ssh $KIF_HOST "sqlite ${KIF_LOCATION}/kif.db \"DELETE FROM store WHERE hash='${HASH}';\""
 
   echo -e " ${RED}removed!${NC}"
 }
@@ -121,7 +121,7 @@ function search {
   TERM=$1
 
   echo -e "Searching for ${YELLOW}${TERM}${NC} ..."
-  ssh $KIF_HOST "sqlite3 -column -header $KIF_LOCATION/kif.db \"SELECT * FROM store WHERE file LIKE '%$TERM%' OR path LIKE '%$TERM%' OR hash IS '$TERM' ORDER BY date DESC;\""
+  ssh $KIF_HOST "sqlite -column -header ${KIF_LOCATION}/kif.db \"SELECT * FROM store WHERE file LIKE '%${TERM}%' OR path LIKE '%${TERM}%' OR hash='${TERM}' ORDER BY date DESC;\""
 }
 
 function usage {
@@ -142,7 +142,7 @@ do
 
     h  ) usage; exit;;
     \? ) usage; exit;;
-    :  ) echo -e "${RED}Missing${NC} option argument for -$OPTARG" >&2; exit 1;;
+    :  ) echo -e "${RED}Missing${NC} option argument for -${OPTARG}" >&2; exit 1;;
   esac
 
   # remove used argument
